@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASR - Advanced Stock Rader</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Tailwind CSS CDN (개발용) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind CSS 경고 숨기기
+        tailwind.config = {
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Micro+5&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS 리셋 */
+        * {
+            box-sizing: border-box;
+        }
+        
+        
+        body {
+            background: white;
+            color: black;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* 헤더 영역 */
+        .header {
+            background: transparent !important;
+            color: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            position: relative !important;
+            width: 100% !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: 0 !important;
+            bottom: auto !important;
+            transform: none !important;
+            box-sizing: border-box !important;
+        }
+        
+        .header > div {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            max-width: 1600px !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            width: 100% !important;
+            position: relative !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: 0 !important;
+            bottom: auto !important;
+            transform: none !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* ASR 로고 */
+        .logo-section {
+            flex: 0 0 auto;
+        }
+        
+        .asr-logo {
+            font-family: 'Micro 5', monospace;
+            font-weight: bold;
+            font-size: 64px;
+            letter-spacing: 2px;
+            color: black !important;
+            text-decoration: none;
+        }
+        
+        /* 네비게이션 */
+        .nav-links {
+            display: flex;
+            gap: 50px;
+            align-items: center;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .nav-link {
+            color: black !important;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #3b82f6 !important;
+        }
+        
+        /* 로그인 버튼 */
+        .login-btn {
+            background: black;
+            color: white;
+            border: 1px solid #333;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            flex: 0 0 auto;
+        }
+        
+        .login-btn:hover {
+            background: #333;
+            border-color: #555;
+        }
+        
+        /* 박스 공통 스타일 */
+        .box {
+            background: black;
+            color: white;
+            margin: 10px;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        /* 첫 번째 박스 - 검색 */
+        .search-box {
+            background: black;
+            color: white;
+            margin: 5px;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        
+
+        /* 두 번째 박스 - 지수 */
+        .index-box {
+            background: #2D2D2D;
+            color: white;
+            margin: 5px 0;
+            border-radius: 0;
+            padding: 10px 20px;
+            display: flex;
+            gap: 60px;
+            align-items: center;
+            font-size: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .index-container {
+            display: flex;
+            gap: 120px;
+            align-items: center;
+            animation: scroll-left 120s linear infinite;
+            animation-delay: 1s;
+            white-space: nowrap;
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(0%);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+        
+        .index-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        
+        
+        /* 세 번째 박스 - 메인 컨텐츠 */
+        
+        
+        .index-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        
+        
+        .positive {
+            color: #4ade80;
+        }
+        
+        .negative {
+            color: #f87171;
+        }
+        
+        /* 차트 영역 */
+        
+        
+        
+        
+        /* 로딩 오버레이 */
+        
+        /* 컨테이너 - 메인 컨텐츠 */
+        .content-container {
+            padding: 45px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 뉴스분석 박스 */
+        .news-analysis-box {
+            background: #2D2D2D;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        /* 모든 분석 박스를 한 줄에 배치 */
+        .all-analysis-boxes {
+            display: flex;
+            gap: 20px;
+        }
+
+        .news-analysis-box {
+            background: #2D2D2D;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 3;
+            min-height: 700px;
+        }
+
+        /* AI분석과 차트분석을 하나의 박스로 묶기 */
+        .ai-chart-analysis-box {
+            background: #2D2D2D;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 7;
+            min-height: 700px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .ai-section,
+        .chart-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 구분선 */
+        .chart-section {
+            border-left: 1px solid #505050;
+            padding-left: 20px;
+            margin-left: 0;
+        }
+
+        /* 박스 제목 */
+        .box-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        /* 섹션 스타일 */
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-label {
+            display: block;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        /* Period 입력 */
+        .period-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .period-input {
+            background: #404040;
+            border: 1px solid #505050;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .period-separator {
+            color: #888;
+            font-size: 16px;
+        }
+
+        /* News 라디오 옵션 */
+        .news-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        /* 스크롤바 스타일링 */
+        .news-options::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .news-options::-webkit-scrollbar-track {
+            background: #1a1a1a;
+            border-radius: 3px;
+        }
+        
+        .news-options::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+        
+        .news-options::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"],
+        .radio-option input[type="checkbox"] {
+            accent-color: #3b82f6;
+        }
+
+        .radio-text {
+            color: white;
+            font-size: 14px;
+        }
+
+        /* 뉴스분석 버튼 */
+        .news-analyze-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .news-analyze-btn:hover {
+            background: #2563eb;
+        }
+
+        .news-analyze-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Company 리스트 */
+        .company-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .company-item {
+            background: #404040;
+            color: white !important;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .company-item:hover {
+            background: #505050;
+        }
+
+        .company-item span {
+            color: white !important;
+        }
+
+        /* Model Performance */
+        .performance-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .performance-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .performance-item .pattern-prediction {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .performance-label {
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .performance-item .prediction-arrow {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .performance-item .prediction-percent {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .performance-item .prediction-percent.positive {
+            color: #4ade80;
+        }
+
+        .performance-item .prediction-percent.negative {
+            color: #f87171;
+        }
+
+        /* RF Top 3 박스 */
+        .rf-top3-box {
+            background: #2D2D2D;
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            width: 100%;
+            min-height: 500px;
+        }
+
+        .rf-top3-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: white;
+        }
+
+        /* Chart Patterns */
+        .chart-patterns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pattern-item {
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pattern-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .golden-cross {
+            background: linear-gradient(135deg, #fecaca, #fca5a5);
+        }
+
+        .triangle {
+            background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+        }
+
+        .double {
+            background: linear-gradient(135deg, #bbf7d0, #86efac);
+        }
+
+        .head-shoulders {
+            background: linear-gradient(135deg, #e9d5ff, #d8b4fe);
+        }
+
+        .pattern-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pattern-name {
+            color: #1f2937;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .pattern-prediction {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .prediction-arrow {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .prediction-percent {
+            color: #1f2937;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 반응형 처리 */
+        @media (max-width: 1200px) {
+            .all-analysis-boxes {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 20px;
+            }
+            
+            .chart-patterns {
+                grid-template-columns: 1fr;
+            }
+        }
+        #portfolio-result-area { display: none; } /* 결과 영역은 처음엔 숨김 */
+        .spinner-border { width: 3rem; height: 3rem; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div>
+            <!-- Logo -->
+            <div class="logo-section">
+                <a href="/index.html" class="asr-logo">ASR</a>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="nav-links">
+                <a href="/index.html" class="nav-link">홈</a>
+                <a href="/chart.html" class="nav-link">차트</a>
+                <a href="/news.html" class="nav-link">뉴스</a>
+                <a href="/chatbot.html" class="nav-link">AI챗봇</a>
+                <a href="/board.html" class="nav-link">게시판</a>
+            </nav>
+            
+            <!-- Login Button -->
+            <a href="/login.html" class="login-btn">로그인</a>
+        </div>
+    </header>
+
+    <!-- 첫 번째 박스 - 지수 -->
+    <div class="index-box">
+        <div class="index-container" id="index-container">
+            <!-- 실제 데이터가 여기에 동적으로 추가됩니다 -->
+        </div>
+    </div>
+
+    <!-- 컨테이너 - 메인 컨텐츠 -->
+    <div class="content-container">
+        <!-- 모든 분석 박스를 한 줄에 배치 -->
+        <div class="all-analysis-boxes">
+            <!-- 뉴스분석 박스 -->
+            <div class="news-analysis-box">
+                <h3 class="box-title">뉴스분석</h3>
+                
+                <!-- Period 섹션 -->
+                <div class="section">
+                    <label class="section-label">Period</label>
+                    <div class="period-inputs">
+                        <input type="datetime-local" class="period-input" id="start-period" value="2025-10-20T09:00">
+                        <span class="period-separator">~</span>
+                        <input type="datetime-local" class="period-input" id="end-period" value="2025-10-21T20:00">
+                    </div>
+                </div>
+                
+            <!-- News 섹션 -->
+            <div class="section">
+                <label class="section-label">News</label>
+                <div class="news-options">
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="hankyung" checked>
+                        <span class="radio-text">한국경제</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="mk" checked>
+                        <span class="radio-text">매일경제</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="naver" checked>
+                        <span class="radio-text">Naver</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="google" checked>
+                        <span class="radio-text">Google</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="yahoo" checked>
+                        <span class="radio-text">Yahoo</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="marketbeat" checked>
+                        <span class="radio-text">MarketBeat</span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="checkbox" name="news-source" value="nasdaq" checked>
+                        <span class="radio-text">Nasdaq</span>
+                    </label>
+                </div>
+                <button class="news-analyze-btn" id="news-analyze-btn">뉴스분석</button>
+            </div>
+                
+                <!-- Company 섹션 -->
+                <div class="section">
+                    <label class="section-label">Company</label>
+                    <div class="company-list" id="news-companies">
+                        <!-- 뉴스 분석 결과가 여기에 표시됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI분석과 차트분석 박스 (하나의 박스) -->
+            <div class="ai-chart-analysis-box">
+                <!-- AI분석 섹션 -->
+                <div class="ai-section">
+                    <h3 class="box-title">AI</h3>
+                    
+                    <!-- Model Performance 섹션 -->
+                    <div class="section">
+                        <label class="section-label">Model Performance</label>
+                        <div class="performance-bars">
+                            <div class="performance-item">
+                                <div class="pattern-prediction">
+                                    <span class="performance-label">LSTM</span>
+                                    <span class="prediction-arrow">↗</span>
+                                    <span class="prediction-percent">0.0%</span>
+                                </div>
+                            </div>
+                            <div class="performance-item">
+                                <div class="pattern-prediction">
+                                    <span class="performance-label">Random Forest</span>
+                                    <span class="prediction-arrow">↗</span>
+                                    <span class="prediction-percent">0.0%</span>
+                                </div>
+                            </div>
+                            <div class="performance-item">
+                                <div class="pattern-prediction">
+                                    <span class="performance-label">Combined Performance</span>
+                                    <span class="prediction-arrow">↗</span>
+                                    <span class="prediction-percent">0.0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Company 섹션 -->
+                    <div class="section">
+                        <label class="section-label">Company</label>
+                        <div class="company-list" id="ai-companies">
+                            <!-- AI 분석 결과가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 차트분석 섹션 -->
+                <div class="chart-section">
+                <h3 class="box-title">차트분석</h3>
+                
+                <!-- Chart Analysis 섹션 -->
+                <div class="section">
+                    <label class="section-label">Chart Analysis</label>
+                    <div class="chart-patterns">
+                        <div class="pattern-item golden-cross">
+                            <div class="pattern-content">
+                                <div class="pattern-name">골든크로스</div>
+                                <div class="pattern-name">데드크로스</div>
+                                <div class="pattern-prediction">
+                                    <span class="prediction-arrow">↗</span>
+                                    <span class="prediction-percent">2.1%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pattern-item triangle">
+                            <div class="pattern-content">
+                                <div class="pattern-name">삼각수렴 패턴</div>
+                                <div class="pattern-prediction">
+                                    <span class="prediction-arrow">↗</span>
+                                    <span class="prediction-percent">3.4%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pattern-item double">
+                            <div class="pattern-content">
+                                <div class="pattern-name">더블탑</div>
+                                <div class="pattern-name">더블바텀</div>
+                                <div class="pattern-prediction">
+                                    <span class="prediction-arrow">↗</span>
+                                    <span class="prediction-percent">4.2%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pattern-item head-shoulders">
+                            <div class="pattern-content">
+                                <div class="pattern-name">헤드앤숄더 패턴</div>
+                                <div class="pattern-prediction">
+                                    <span class="prediction-arrow">↘</span>
+                                    <span class="prediction-percent">1.6%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                    <!-- Company 섹션 -->
+                    <div class="section">
+                        <label class="section-label">Company</label>
+                        <div class="company-list" id="chart-companies">
+                            <!-- 차트 분석 결과가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+    <div class="jumbotron text-center">
+        </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h3>AI 포트폴리오 최적화</h3>
+        </div>
+        <div class="card-body">
+            <p>포트폴리오에 포함할 종목을 선택하세요 (최소 2개). (다중 선택: Ctrl 또는 Shift 키 사용)</p>
+            
+            <div class="form-group">
+                <select multiple class="form-control" id="stock-multiselect" size="8" style="width: 100%">
+                <option>종목 목록 로딩 중...</option>
+                </select>
+            </div>
+            
+            <button class="btn btn-primary btn-block" id="optimize-button">
+                AI 포트폴리오 최적화 시작!
+            </button>
+            
+            <div id="loading-spinner" class="text-center mt-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2">AI가 포트폴리오를 분석 중입니다... (최대 1~2분 소요)</p>
+            </div>
+            
+            <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
+        </div>
+    </div>
+
+    <div id="portfolio-result-area" class="mt-4 mb-4">
+        <h2>📊 AI 포트폴리오 분석 결과</h2>
+        <hr>
+        <p id="exchange-rate-info" class="alert alert-info"></p>
+
+        <div class="row">
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">🏆 AI 추천 최종 포트폴리오</div>
+                    <div class="card-body">
+                        <canvas id="portfolio-pie-chart"></canvas>
+                        <p class="mt-3 text-info" id="ai-reason"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">📈 RF(Top 3) 주가 방향 예측</div>
+                    <div class="card-body">
+                        <table class="table table-sm table-bordered">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>종목</th>
+                                    <th>현재가 (원화)</th>
+                                    <th>예측 방향</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prediction-table-body">
+                                </tbody>
+                        </table>
+                        <small class="form-text text-muted">예상가는 추세 참고용이며, 절대적인 수치가 아닙니다.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">⚖️ 마코위츠 포트폴리오 (이상적 비중)</div>
+        <div class="card-body">
+            <p class="text-muted">
+                과거 1년간 데이터를 기반으로 변동성을 최소화하고 수익을 극대화하는 이상적인 투자 비중입니다. (AI 조정 전)
+            </p>
+            <table class="table table-sm table-bordered text-center">
+                <thead class="thead-light">
+                    <tr id="markowitz-header-row"></tr>
+                </thead>
+                <tbody>
+                    <tr id="markowitz-data-row"></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-7">
+            ```
+            <div class="card-header">📰 포트폴리오 뉴스 감성 분석</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-3">
+                        <h5 class="text-muted">감성 지수</h5>
+                        <h3 id="sentiment-score">N/A</h3>
+                    </div>
+                    <div class="col-3">
+                        <h5 class="text-muted">총 기사</h5>
+                        <h3 id="sentiment-total">N/A</h3>
+                    </div>
+                    <div class="col-2">
+                        <h5 class="text-success">긍정</h5>
+                        <h3 id="sentiment-positive">N/A</h3>
+                    </div>
+                    <div class="col-2">
+                        <h5 class="text-danger">부정</h5>
+                        <h3 id="sentiment-negative">N/A</h3>
+                    </div>
+                    <div class="col-2">
+                        <h5 class="text-secondary">중립</h5>
+                        <h3 id="sentiment-neutral">N/A</h3>
+                    </div>
+                </div>
+                <p class="mt-3 alert alert-secondary" id="sentiment-status"></p>
+            </div>
+        </div>
+    </div>
+    </div> <script src="/js/auth.js"></script>
+<script src="/js/index.js"></script> <script src="/js/portfolio.js"></script>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="/js/auth.js"></script>
+<script src="/js/index.js"></script> 
+
+<script src="/js/portfolio.js"></script>
+</body>
+    
+    <!-- Main JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/index.js?v=1000"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // index.html 전용 지수 데이터 로딩
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Index.html loaded');
+            console.log('Index container element:', document.getElementById('index-container'));
+            
+            // 지수 데이터 표시 함수
+            function displayIndexData(indexData) {
+                const container = document.getElementById('index-container');
+                if (!container) return;
+                
+                // 기존 데이터 제거
+                container.innerHTML = '';
+                
+                // 데이터를 두 번 복사하여 무한 스크롤 효과 생성
+                const doubledData = [...indexData, ...indexData];
+                
+                doubledData.forEach(item => {
+                    const indexItem = document.createElement('div');
+                    indexItem.className = 'index-item';
+                    
+                    const isPositive = item.change > 0;
+                    const isNegative = item.change < 0;
+                    const changeColor = isPositive ? '#4ade80' : (isNegative ? '#f87171' : '#ffffff');
+                    const changeSymbol = isPositive ? '+' : (isNegative ? '' : '');
+                    
+                    indexItem.innerHTML = `
+                        <span>${item.name} ${item.value} <span style="color: ${changeColor};">${changeSymbol}${item.change}%</span></span>
+                    `;
+                    
+                    container.appendChild(indexItem);
+                });
+            }
+            
+            // 지수 데이터 로드
+            async function loadIndexData() {
+                try {
+                    console.log('Fetching index data...');
+                    const response = await fetch('/api/chart/index-data');
+                    const result = await response.json();
+                    
+                    if (result.data && result.data.length > 0) {
+                        console.log('Index data received:', result.data);
+                        displayIndexData(result.data);
+                    } else {
+                        console.log('No index data, using default data');
+                        // 기본 데이터 표시
+                        const defaultData = [
+                            { name: '달러환율', symbol: 'USD/KRW', value: '1,419.8', change: 0.53 },
+                            { name: '달러인덱스', symbol: 'DXY', value: '103.25', change: -0.15 },
+                            { name: '코스피', symbol: '^KS11', value: '3,748.8', change: -0.53 },
+                            { name: '코스닥', symbol: '^KQ11', value: '862.8', change: -0.53 },
+                            { name: 'S&P500', symbol: '^GSPC', value: '6,629.1', change: 0.53 },
+                            { name: '나스닥', symbol: '^IXIC', value: '22,562.5', change: 0.53 },
+                            { name: 'VIX', symbol: '^VIX', value: '25.3', change: -0.53 },
+                            { name: '금', symbol: 'GC=F', value: '2,650.5', change: 0.25 },
+                            { name: '은', symbol: 'SI=F', value: '32.45', change: -0.15 },
+                            { name: '구리', symbol: 'HG=F', value: '4.850', change: 0.85 }
+                        ];
+                        displayIndexData(defaultData);
+                    }
+                } catch (error) {
+                    console.error('Error fetching index data:', error);
+                    // 기본 데이터 표시
+                    const defaultData = [
+                        { name: '달러환율', symbol: 'USD/KRW', value: '1,419.8', change: 0.53 },
+                        { name: '달러인덱스', symbol: 'DXY', value: '103.25', change: -0.15 },
+                        { name: '코스피', symbol: '^KS11', value: '3,748.8', change: -0.53 },
+                        { name: '코스닥', symbol: '^KQ11', value: '862.8', change: -0.53 },
+                        { name: 'S&P500', symbol: '^GSPC', value: '6,629.1', change: 0.53 },
+                        { name: '나스닥', symbol: '^IXIC', value: '22,562.5', change: 0.53 },
+                        { name: 'VIX', symbol: '^VIX', value: '25.3', change: -0.53 },
+                        { name: '금', symbol: 'GC=F', value: '2,650.5', change: 0.25 },
+                        { name: '은', symbol: 'SI=F', value: '32.45', change: -0.15 },
+                        { name: '구리', symbol: 'HG=F', value: '4.850', change: 0.85 }
+                    ];
+                    displayIndexData(defaultData);
+                }
+            }
+            
+            // 페이지 로드 후 지수 데이터 로드
+            setTimeout(loadIndexData, 1000);
+        });
+    </script>
+</html>
